@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Памятные книги — Истории о близких людях</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,600&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal:       #1a5c4e;
+    --teal-mid:   #236b5a;
+    --teal-light: #2d8a70;
+    --teal-pale:  #e8f2ef;
+    --cream:      #faf8f4;
+    --cream-dark: #f0ece4;
+    --ink:        #1a1a18;
+    --ink-soft:   #3d3d38;
+    --gold:       #b8935a;
+    --gold-light: #d4aa74;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:'Jost',sans-serif;background:var(--cream);color:var(--ink);overflow-x:hidden}
+
+  /* NAV */
+  nav{
+    position:fixed;top:0;left:0;right:0;z-index:200;
+    padding:22px 64px;
+    display:flex;justify-content:space-between;align-items:center;
+    background:rgba(250,248,244,.9);backdrop-filter:blur(14px);
+    border-bottom:1px solid rgba(26,92,78,.1);
+  }
+  .nav-logo{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--teal);letter-spacing:.04em}
+  .nav-links{display:flex;gap:36px;align-items:center}
+  .nav-links a{font-size:11px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-decoration:none;transition:color .3s}
+  .nav-links a:hover{color:var(--teal)}
+  .nav-cta a{background:var(--teal);color:#fff;text-decoration:none;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:12px 26px;transition:all .3s}
+  .nav-cta a:hover{background:var(--gold)}
+
+  /* HERO */
+  .hero{min-height:100vh;display:grid;grid-template-columns:55% 45%;position:relative;overflow:hidden}
+  .hero-left{
+    background:var(--teal);
+    display:flex;flex-direction:column;justify-content:center;
+    padding:150px 80px 80px;position:relative;overflow:hidden;
+  }
+  .hero-left::before{content:'';position:absolute;top:-120px;right:-120px;width:500px;height:500px;border-radius:50%;background:rgba(255,255,255,.03)}
+  .hero-eyebrow{font-size:11px;font-weight:400;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-light);margin-bottom:28px;animation:fadeUp .8s ease both}
+  .hero-title{font-family:'Cormorant Garamond',serif;font-size:clamp(42px,4.5vw,68px);font-weight:300;color:#fff;line-height:1.15;margin-bottom:28px;animation:fadeUp .8s .15s ease both}
+  .hero-title em{font-style:italic;color:var(--gold-light)}
+  .hero-sub{font-size:15px;font-weight:300;color:rgba(255,255,255,.68);line-height:1.85;margin-bottom:48px;max-width:420px;animation:fadeUp .8s .3s ease both}
+  .btn-gold{display:inline-flex;align-items:center;gap:12px;background:var(--gold);color:#fff;text-decoration:none;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:18px 38px;transition:all .3s;animation:fadeUp .8s .45s ease both}
+  .btn-gold::after{content:'→';font-size:16px;letter-spacing:0;transition:transform .3s}
+  .btn-gold:hover{background:var(--gold-light);transform:translateY(-2px)}
+  .btn-gold:hover::after{transform:translateX(4px)}
+
+  /* ── LOADER ── */
+  #loader{
+    position:fixed;inset:0;z-index:9999;
+    background:var(--teal);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:0;
+    transition:opacity 1s ease, visibility 1s ease;
+    overflow:hidden;
+  }
+  #loader.hidden{opacity:0;visibility:hidden;pointer-events:none}
+
+  /* Subtle texture dots */
+  #loader::before{
+    content:'';position:absolute;inset:0;
+    background-image:radial-gradient(circle, rgba(255,255,255,.04) 1px, transparent 1px);
+    background-size:28px 28px;
+    pointer-events:none;
+  }
+
+  /* Top ornament */
+  .loader-top{
+    font-size:10px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--gold-light);opacity:.75;
+    margin-bottom:52px;
+    display:flex;align-items:center;gap:14px;
+  }
+  .loader-top::before,.loader-top::after{
+    content:'';display:block;width:40px;height:1px;background:var(--gold);opacity:.5;
+  }
+
+  /* ── FLIPPING BOOK ── */
+  .flip-book{
+    width:200px;height:160px;
+    position:relative;
+    margin-bottom:52px;
+  }
+
+  /* The base — closed book look */
+  .fb-base{
+    position:absolute;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    width:190px;height:140px;
+    background:linear-gradient(to bottom,#e8e2d6,#f0ece4);
+    border-radius:3px 10px 10px 3px;
+    box-shadow:0 16px 48px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+  }
+  .fb-spine{
+    position:absolute;
+    left:0;top:0;bottom:0;width:18px;
+    background:linear-gradient(to right,#14473b,var(--teal-mid));
+    border-radius:3px 0 0 3px;
+    box-shadow:inset -3px 0 8px rgba(0,0,0,.2);
+  }
+  .fb-cover-lines{
+    position:absolute;left:28px;right:12px;top:16px;bottom:16px;
+    display:flex;flex-direction:column;gap:8px;
+  }
+  .fb-cl{height:2px;background:rgba(26,92,78,.12);border-radius:1px}
+  .fb-cl:nth-child(1){width:70%}
+  .fb-cl:nth-child(2){width:90%}
+  .fb-cl:nth-child(3){width:80%}
+  .fb-cl:nth-child(4){width:65%}
+  .fb-cl:nth-child(5){width:85%}
+  .fb-cl:nth-child(6){width:50%}
+
+  /* Pages container — pages flip from right to left */
+  .fb-pages{
+    position:absolute;
+    left:50%;top:50%;
+    transform:translate(-50%,-50%);
+    width:190px;height:140px;
+    transform-style:preserve-3d;
+    perspective:800px;
+  }
+
+  .fb-page{
+    position:absolute;
+    right:0;top:0;
+    width:86px;height:140px;
+    transform-origin:left center;
+    transform-style:preserve-3d;
+    border-radius:0 6px 6px 0;
+  }
+
+  /* Front face of each page */
+  .fb-page-front,.fb-page-back{
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+    border-radius:0 6px 6px 0;
+    display:flex;flex-direction:column;gap:7px;
+    padding:14px 12px 14px 8px;
+    overflow:hidden;
+  }
+  .fb-page-front{
+    background:linear-gradient(to right,#f5f0e8,#faf8f4);
+    box-shadow:2px 0 8px rgba(0,0,0,.06);
+  }
+  .fb-page-back{
+    background:linear-gradient(to left,#ede8e0,#f5f0e8);
+    transform:rotateY(180deg);
+    box-shadow:-2px 0 8px rgba(0,0,0,.06);
+  }
+  .fb-page-line{height:1.5px;background:rgba(26,92,78,.1);border-radius:1px;width:100%}
+  .fb-page-line:nth-child(even){width:75%}
+  .fb-page-line:nth-child(3n){width:88%}
+  .fb-page-line:nth-child(5){width:55%}
+
+  /* Animate each page with staggered delays — flip from 0 to -180deg */
+  .fb-page:nth-child(1){z-index:6; animation:pageFlip 3.2s ease-in-out infinite; animation-delay:0s}
+  .fb-page:nth-child(2){z-index:5; animation:pageFlip 3.2s ease-in-out infinite; animation-delay:.4s}
+  .fb-page:nth-child(3){z-index:4; animation:pageFlip 3.2s ease-in-out infinite; animation-delay:.8s}
+  .fb-page:nth-child(4){z-index:3; animation:pageFlip 3.2s ease-in-out infinite; animation-delay:1.2s}
+  .fb-page:nth-child(5){z-index:2; animation:pageFlip 3.2s ease-in-out infinite; animation-delay:1.6s}
+
+  @keyframes pageFlip{
+    0%    {transform:rotateY(0deg);   z-index:6}
+    40%   {transform:rotateY(-90deg); z-index:6}
+    50%   {transform:rotateY(-180deg);z-index:1}
+    100%  {transform:rotateY(-180deg);z-index:1}
+  }
+
+  /* Glow shadow under book */
+  .fb-shadow{
+    width:160px;height:16px;
+    background:radial-gradient(ellipse,rgba(0,0,0,.35) 0%,transparent 70%);
+    border-radius:50%;
+    margin-top:4px;
+    animation:fbShadow 3.2s ease-in-out infinite;
+  }
+  @keyframes fbShadow{
+    0%,100%{transform:scaleX(1);opacity:.7}
+    50%{transform:scaleX(.85);opacity:.45}
+  }
+
+  /* Loading text */
+  .loader-text{
+    font-family:'Cormorant Garamond',serif;
+    font-size:18px;font-weight:300;font-style:italic;
+    color:rgba(255,255,255,.7);
+    margin-top:36px;
+    letter-spacing:.08em;
+    display:flex;align-items:baseline;gap:3px;
+  }
+  .loader-dots span{
+    display:inline-block;
+    animation:dotPop .9s ease-in-out infinite;
+    color:var(--gold-light);
+    font-style:normal;
+    font-size:22px;
+    line-height:0;
+    vertical-align:middle;
+  }
+  .loader-dots span:nth-child(2){animation-delay:.2s}
+  .loader-dots span:nth-child(3){animation-delay:.4s}
+  @keyframes dotPop{
+    0%,80%,100%{opacity:.2;transform:translateY(0)}
+    40%{opacity:1;transform:translateY(-5px)}
+  }
+
+  /* Bottom ornament line */
+  .loader-line{
+    width:0;height:1px;
+    background:linear-gradient(to right,transparent,var(--gold),transparent);
+    margin-top:28px;
+    animation:lineGrow 2.8s ease forwards;
+  }
+  @keyframes lineGrow{from{width:0}to{width:160px}}
+
+  /* ── HERO RIGHT — BOOK ── */
+  .hero-right{
+    background:var(--cream-dark);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;overflow:hidden;
+    padding:120px 40px 80px;
+  }
+  .hero-right::before{
+    content:'';position:absolute;
+    top:-80px;right:-80px;
+    width:380px;height:380px;border-radius:50%;
+    background:rgba(26,92,78,.06);
+  }
+  .hero-right::after{
+    content:'';position:absolute;
+    bottom:-60px;left:-60px;
+    width:260px;height:260px;border-radius:50%;
+    background:rgba(26,92,78,.04);
+  }
+
+  /* 3D Book */
+  .book-scene{
+    perspective:900px;
+    display:flex;flex-direction:column;align-items:center;gap:36px;
+  }
+  .book-3d{
+    width:240px;height:320px;
+    position:relative;
+    transform-style:preserve-3d;
+    transform:rotateY(-22deg) rotateX(4deg);
+    animation:bookFloat 4s ease-in-out infinite;
+    cursor:pointer;
+    transition:transform .6s ease;
+  }
+  .book-3d:hover{transform:rotateY(-8deg) rotateX(2deg) scale(1.04)}
+
+  /* Cover (front face) */
+  .book-cover-face{
+    position:absolute;inset:0;
+    background:linear-gradient(135deg,var(--teal) 0%,var(--teal-mid) 100%);
+    border-radius:2px 10px 10px 2px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    padding:36px 28px;
+    box-shadow:6px 10px 50px rgba(26,92,78,.35), 20px 16px 60px rgba(0,0,0,.18);
+    backface-visibility:hidden;
+    overflow:hidden;
+  }
+  .book-cover-face::before{
+    content:'';position:absolute;
+    inset:10px;border:1px solid rgba(255,255,255,.1);
+    border-radius:0 8px 8px 0;pointer-events:none;
+  }
+  .book-cover-face::after{
+    content:'';position:absolute;
+    top:-40px;right:-40px;
+    width:140px;height:140px;border-radius:50%;
+    background:rgba(255,255,255,.04);
+  }
+  .book-ornament-line{width:50px;height:1px;background:var(--gold-light);opacity:.8}
+  .book-cover-label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--gold-light);text-align:center}
+  .book-cover-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:400;color:#fff;text-align:center;line-height:1.4;position:relative;z-index:1}
+
+  /* Spine */
+  .book-spine-face{
+    position:absolute;
+    top:0;bottom:0;
+    left:-28px;width:28px;
+    background:linear-gradient(to bottom,var(--teal-mid),#14473b);
+    border-radius:4px 0 0 4px;
+    transform:rotateY(-90deg);
+    transform-origin:right center;
+    box-shadow:-6px 0 20px rgba(0,0,0,.2);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .book-spine-text{
+    font-family:'Cormorant Garamond',serif;
+    font-size:11px;letter-spacing:.14em;color:rgba(255,255,255,.5);
+    writing-mode:vertical-rl;text-orientation:mixed;
+    transform:rotate(180deg);
+  }
+
+  /* Pages (right side) */
+  .book-pages-face{
+    position:absolute;
+    top:4px;bottom:4px;right:-6px;width:8px;
+    background:repeating-linear-gradient(to bottom,#f5f0e8 0px,#f5f0e8 1.5px,#e8e2d6 1.5px,#e8e2d6 3px);
+    border-radius:0 2px 2px 0;
+    box-shadow:4px 0 8px rgba(0,0,0,.08);
+  }
+
+  /* Shadow under book */
+  .book-shadow{
+    width:220px;height:20px;
+    background:radial-gradient(ellipse,rgba(26,92,78,.25) 0%,transparent 70%);
+    border-radius:50%;
+    animation:shadowPulse 4s ease-in-out infinite;
+  }
+
+  /* Floating badges around book */
+  .book-badge{
+    position:absolute;
+    background:#fff;
+    padding:10px 16px;
+    border-left:3px solid var(--gold);
+    box-shadow:0 8px 32px rgba(0,0,0,.1);
+    font-size:12px;font-weight:300;color:var(--ink-soft);
+    white-space:nowrap;
+    animation:badgeFloat 3s ease-in-out infinite;
+  }
+  .book-badge span{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--teal);display:block;line-height:1.2}
+  .badge-1{top:80px;right:-20px;animation-delay:0s}
+  .badge-2{bottom:130px;left:-30px;animation-delay:1s;border-left-color:var(--teal)}
+  .badge-2 span{color:var(--gold)}
+  .badge-3{top:200px;right:-15px;animation-delay:2s}
+
+  @keyframes bookFloat{
+    0%,100%{transform:rotateY(-22deg) rotateX(4deg) translateY(0)}
+    50%{transform:rotateY(-22deg) rotateX(4deg) translateY(-14px)}
+  }
+  @keyframes shadowPulse{
+    0%,100%{transform:scaleX(1);opacity:.8}
+    50%{transform:scaleX(.85);opacity:.5}
+  }
+  @keyframes badgeFloat{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-6px)}
+  }
+
+  /* GALLERY STRIP */
+  .gallery-strip{display:grid;grid-template-columns:repeat(5,1fr);height:260px;gap:4px;overflow:hidden}
+  .gs-item{overflow:hidden;position:relative;cursor:pointer}
+  .gs-item img{width:100%;height:100%;object-fit:cover;filter:saturate(.55) brightness(.7);transition:all .6s}
+  .gs-item:hover img{filter:saturate(.95) brightness(.9);transform:scale(1.06)}
+  .gs-cap{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,92,78,.85));padding:22px 14px 12px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.8);transform:translateY(100%);transition:transform .4s}
+  .gs-item:hover .gs-cap{transform:none}
+
+  /* FOR WHOM */
+  .for-whom{padding:120px 80px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;background:var(--cream)}
+  .section-label{font-size:10px;font-weight:500;letter-spacing:.25em;text-transform:uppercase;color:var(--gold);margin-bottom:18px}
+  .section-title{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,3.5vw,52px);font-weight:300;line-height:1.2;color:var(--teal)}
+  .fw-list{margin-top:40px;display:flex;flex-direction:column;gap:14px}
+  .fw-item{display:flex;align-items:flex-start;gap:20px;padding:18px 22px;background:var(--cream-dark);border-left:3px solid var(--teal-light);transition:all .3s;cursor:default}
+  .fw-item:hover{background:var(--teal-pale);border-left-color:var(--gold);transform:translateX(6px)}
+  .fw-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+  .fw-text{font-size:14px;font-weight:300;line-height:1.65;color:var(--ink-soft)}
+  .photo-mosaic{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:220px 220px;gap:6px}
+  .pm-1{grid-row:span 2;overflow:hidden;position:relative}
+  .pm-2,.pm-3{overflow:hidden;position:relative}
+  .pm-1 img,.pm-2 img,.pm-3 img{width:100%;height:100%;object-fit:cover;filter:saturate(.65);transition:all .5s}
+  .pm-1:hover img,.pm-2:hover img,.pm-3:hover img{filter:saturate(1);transform:scale(1.04)}
+  .pm-border::after{content:'';position:absolute;inset:0;border:2px solid rgba(26,92,78,.14);pointer-events:none}
+
+  /* ABOUT */
+  .about-section{background:var(--teal);display:grid;grid-template-columns:1fr 1fr;min-height:520px;overflow:hidden}
+  .about-photo{position:relative;overflow:hidden}
+  .about-photo img{width:100%;height:100%;object-fit:cover;filter:saturate(.4) brightness(.6)}
+  .about-photo-overlay{position:absolute;inset:0;background:rgba(26,92,78,.3)}
+  .about-content{display:flex;flex-direction:column;justify-content:center;padding:80px 70px}
+  .about-content .section-label{color:var(--gold-light)}
+  .about-content .section-title{color:#fff}
+  .about-divider{width:60px;height:1px;background:var(--gold);margin:28px 0}
+  .about-text{font-size:15px;font-weight:300;color:rgba(255,255,255,.7);line-height:1.9}
+  .about-tags{display:flex;flex-wrap:wrap;gap:10px;margin-top:36px}
+  .about-tag{font-size:10px;letter-spacing:.15em;text-transform:uppercase;padding:8px 16px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.55)}
+
+  /* BOOK TYPES */
+  .book-types{padding:120px 80px;background:var(--cream-dark)}
+  .bt-header{margin-bottom:64px}
+  .bt-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .bt-card{position:relative;overflow:hidden;cursor:default;min-height:360px}
+  .bt-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.45) brightness(.45);transition:all .6s}
+  .bt-card:hover img{filter:saturate(.7) brightness(.58);transform:scale(1.04)}
+  .bt-card-body{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:flex-end;padding:44px;background:linear-gradient(transparent 15%,rgba(8,24,20,.88));min-height:360px}
+  .bt-card-num{font-family:'Cormorant Garamond',serif;font-size:72px;font-weight:300;color:rgba(255,255,255,.07);position:absolute;top:20px;right:22px;line-height:1}
+  .bt-card-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:400;color:#fff;margin-bottom:20px}
+  .bt-items{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .bt-items li{font-size:13px;font-weight:300;color:rgba(255,255,255,.65);padding-left:16px;position:relative;line-height:1.5}
+  .bt-items li::before{content:'—';position:absolute;left:0;color:var(--gold-light);opacity:.7}
+
+  /* PROCESS */
+  .process{padding:120px 80px;background:var(--cream)}
+  .proc-header{margin-bottom:80px}
+  .proc-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+  .proc-step{background:var(--cream-dark);padding:50px 36px;position:relative;overflow:hidden;transition:all .3s}
+  .proc-step:hover{background:var(--teal-pale)}
+  .proc-num{font-family:'Cormorant Garamond',serif;font-size:110px;font-weight:300;color:var(--teal);opacity:.07;position:absolute;top:0;right:10px;line-height:1}
+  .proc-icon{width:48px;height:48px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:22px}
+  .proc-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:500;color:var(--teal);margin-bottom:12px}
+  .proc-desc{font-size:14px;font-weight:300;color:var(--ink-soft);line-height:1.75}
+
+  /* INCLUDED */
+  .included-section{display:grid;grid-template-columns:1fr 1fr;background:var(--cream-dark)}
+  .inc-photo{position:relative;overflow:hidden;min-height:600px}
+  .inc-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:saturate(.55) brightness(.65)}
+  .inc-photo-overlay{position:absolute;inset:0;background:linear-gradient(to right,transparent 55%,var(--cream-dark))}
+  .inc-content{padding:100px 70px 80px}
+  .inc-list{margin-top:40px;display:flex;flex-direction:column}
+  .inc-item{display:flex;align-items:center;gap:16px;padding:15px 0;border-bottom:1px solid rgba(26,92,78,.1);transition:all .3s}
+  .inc-dot{width:8px;height:8px;border-radius:50%;background:var(--teal-light);flex-shrink:0;transition:all .3s}
+  .inc-item:hover .inc-dot{background:var(--gold);transform:scale(1.4)}
+  .inc-text{font-size:15px;font-weight:300;color:var(--ink-soft)}
+  .inc-note{margin-top:36px;background:var(--teal-pale);border-left:3px solid var(--teal);padding:22px 26px;font-size:13px;font-weight:300;color:var(--ink-soft);line-height:1.75}
+
+  /* TESTIMONIALS */
+  .testimonial{background:var(--ink);padding:100px 80px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px}
+  .testi-card{border:1px solid rgba(255,255,255,.07);padding:40px 36px;transition:all .4s;background:rgba(255,255,255,.02)}
+  .testi-card:hover{border-color:rgba(184,147,90,.4);transform:translateY(-4px);background:rgba(255,255,255,.04)}
+  .testi-stars{color:var(--gold);font-size:14px;margin-bottom:20px;letter-spacing:4px}
+  .testi-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:19px;color:rgba(255,255,255,.75);line-height:1.65;margin-bottom:24px}
+  .testi-author{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.32)}
+
+  /* CTA */
+  .cta{position:relative;overflow:hidden;min-height:580px;display:flex;align-items:center;justify-content:center}
+  .cta-bg{position:absolute;inset:0}
+  .cta-bg img{width:100%;height:100%;object-fit:cover;filter:saturate(.4) brightness(.3)}
+  .cta-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(26,92,78,.9),rgba(10,20,18,.75))}
+  .cta-body{position:relative;z-index:2;text-align:center;max-width:700px;padding:60px 40px}
+  .cta-label{font-size:10px;letter-spacing:.25em;text-transform:uppercase;color:var(--gold-light);margin-bottom:20px;display:block}
+  .cta-title{font-family:'Cormorant Garamond',serif;font-size:clamp(38px,5vw,62px);font-weight:300;color:#fff;line-height:1.2;margin-bottom:20px}
+  .cta-title em{font-style:italic;color:var(--gold-light)}
+  .cta-sub{font-size:16px;font-weight:300;color:rgba(255,255,255,.6);margin-bottom:48px;line-height:1.7}
+  .cta-btns{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+  .btn-white{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--teal);text-decoration:none;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:18px 42px;transition:all .3s}
+  .btn-white:hover{background:var(--gold);color:#fff;transform:translateY(-2px)}
+  .btn-outline{display:inline-flex;align-items:center;background:transparent;color:#fff;text-decoration:none;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;padding:18px 42px;border:1px solid rgba(255,255,255,.3);transition:all .3s}
+  .btn-outline:hover{border-color:var(--gold-light);color:var(--gold-light);transform:translateY(-2px)}
+
+  /* FOOTER */
+  footer{background:#0c1512;padding:64px 80px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:24px}
+  .footer-logo{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:400;color:#fff}
+  .footer-mid{text-align:center;font-size:12px;font-weight:300;color:rgba(255,255,255,.3);line-height:1.9}
+  .footer-right{text-align:right}
+  .footer-right small{display:block;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.28);margin-bottom:8px}
+  .footer-right a{display:block;font-size:18px;font-weight:400;color:var(--gold-light);text-decoration:none;letter-spacing:.05em;transition:color .3s}
+  .footer-right a:hover{color:#fff}
+  .footer-wa{font-size:12px!important;color:rgba(255,255,255,.3)!important;margin-top:4px}
+
+  /* ANIM */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+  .reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.visible{opacity:1;transform:none}
+
+  /* RESPONSIVE */
+  @media(max-width:960px){
+    nav{padding:18px 24px}
+    .nav-links{display:none}
+    .hero,.for-whom,.about-section,.bt-grid,.included-section,.testimonial{grid-template-columns:1fr}
+    .hero-right{min-height:400px}
+    .hero-left{padding:120px 28px 60px}
+    .for-whom,.process,.book-types{padding:80px 28px}
+    .proc-steps{grid-template-columns:1fr}
+    .inc-photo{min-height:280px}
+    .inc-content{padding:60px 28px}
+    .gallery-strip{grid-template-columns:1fr 1fr 1fr;height:180px}
+    .gallery-strip .gs-item:nth-child(n+4){display:none}
+    .testimonial{padding:60px 28px;grid-template-columns:1fr}
+    footer{padding:40px 28px;flex-direction:column;text-align:center}
+    .footer-right{text-align:center}
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-top">Памятные книги</div>
+
+  <div style="display:flex;flex-direction:column;align-items:center">
+    <div class="flip-book">
+      <!-- Static base book -->
+      <div class="fb-base">
+        <div class="fb-spine"></div>
+        <div class="fb-cover-lines">
+          <div class="fb-cl"></div><div class="fb-cl"></div>
+          <div class="fb-cl"></div><div class="fb-cl"></div>
+          <div class="fb-cl"></div><div class="fb-cl"></div>
+        </div>
+      </div>
+      <!-- Flipping pages -->
+      <div class="fb-pages" style="perspective:800px">
+        <div class="fb-page">
+          <div class="fb-page-front">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div>
+          </div>
+          <div class="fb-page-back">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div>
+          </div>
+        </div>
+        <div class="fb-page">
+          <div class="fb-page-front">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+          </div>
+          <div class="fb-page-back">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+          </div>
+        </div>
+        <div class="fb-page">
+          <div class="fb-page-front">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div>
+          </div>
+          <div class="fb-page-back">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div>
+          </div>
+        </div>
+        <div class="fb-page">
+          <div class="fb-page-front">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+          </div>
+          <div class="fb-page-back">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+          </div>
+        </div>
+        <div class="fb-page">
+          <div class="fb-page-front">
+            <div class="fb-page-line"></div><div class="fb-page-line"></div>
+            <div class="fb-page-line"></div>
+          </div>
+          <div class="fb-page-back">
+            <div class="fb-page-line"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fb-shadow"></div>
+  </div>
+
+  <div class="loader-text">
+    Загрузка
+    <span class="loader-dots">
+      <span>.</span><span>.</span><span>.</span>
+    </span>
+  </div>
+  <div class="loader-line"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Памятные книги</div>
+  <div class="nav-links">
+    <a href="#for-whom">Для кого</a>
+    <a href="#books">Виды книг</a>
+    <a href="#process">Процесс</a>
+    <a href="#included">Что входит</a>
+  </div>
+  <div class="nav-cta"><a href="tel:+77019977300">Консультация</a></div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-left">
+    <p class="hero-eyebrow">Авторские книги о людях · Онлайн</p>
+    <h1 class="hero-title">Создаю памятные<br>книги о <em>близких<br>людях</em></h1>
+    <p class="hero-sub">Сохраняю память, историю и голос ваших родных. Работаю онлайн с клиентами из Казахстана и за его пределами. От интервью до готовой книги — под ключ.</p>
+    <a href="tel:+77019977300" class="btn-gold">Получить консультацию</a>
+  </div>
+  <div class="hero-right">
+    <div class="book-scene">
+      <div class="book-3d" id="heroBook">
+        <div class="book-spine-face"><span class="book-spine-text">Памятные книги</span></div>
+        <div class="book-cover-face">
+          <p class="book-cover-label">история жизни</p>
+          <div class="book-ornament-line"></div>
+          <p class="book-cover-title">Семейная<br>книга</p>
+          <div class="book-ornament-line"></div>
+          <p class="book-cover-label">с любовью и памятью</p>
+        </div>
+        <div class="book-pages-face"></div>
+        <!-- Floating badges -->
+        <div class="book-badge badge-1"><span>100%</span>под ключ</div>
+        <div class="book-badge badge-2"><span>Бесплатно</span>консультация</div>
+        <div class="book-badge badge-3"><span>Онлайн</span>весь мир</div>
+      </div>
+      <div class="book-shadow"></div>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY STRIP -->
+<div class="gallery-strip">
+  <div class="gs-item"><img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=500&q=80" alt="чтение" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"><div class="gs-cap">Истории</div></div>
+  <div class="gs-item"><img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=500&q=80" alt="письма" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"><div class="gs-cap">Воспоминания</div></div>
+  <div class="gs-item"><img src="https://images.unsplash.com/photo-1506784365847-bbad939e9335?w=500&q=80" alt="страницы" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"><div class="gs-cap">Книги</div></div>
+  <div class="gs-item"><img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=500&q=80" alt="семья" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"><div class="gs-cap">Семья</div></div>
+  <div class="gs-item"><img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=500&q=80" alt="дизайн" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"><div class="gs-cap">Дизайн</div></div>
+</div>
+
+<!-- FOR WHOM -->
+<section class="for-whom" id="for-whom">
+  <div class="reveal">
+    <p class="section-label">Для кого</p>
+    <h2 class="section-title">Эта услуга для вас,<br>если вы хотите</h2>
+    <div class="fw-list">
+      <div class="fw-item"><span class="fw-icon">📖</span><p class="fw-text">Сохранить память о родителях, бабушках и дедушках</p></div>
+      <div class="fw-item"><span class="fw-icon">🌿</span><p class="fw-text">Оформить историю семьи в красивую книгу</p></div>
+      <div class="fw-item"><span class="fw-icon">🎁</span><p class="fw-text">Сделать ценный, личный подарок близким</p></div>
+      <div class="fw-item"><span class="fw-icon">👶</span><p class="fw-text">Сохранить воспоминания для детей и внуков</p></div>
+      <div class="fw-item"><span class="fw-icon">✨</span><p class="fw-text">Зафиксировать важный жизненный путь человека</p></div>
+    </div>
+  </div>
+  <div class="photo-mosaic reveal">
+    <div class="pm-1 pm-border"><img src="https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?w=600&q=80" alt="старинные фото" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"></div>
+    <div class="pm-2 pm-border"><img src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?w=500&q=80" alt="семья" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"></div>
+    <div class="pm-3 pm-border"><img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=500&q=80" alt="портрет" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section class="about-section">
+  <div class="about-photo">
+    <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=800&q=80" alt="написание" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')">
+    <div class="about-photo-overlay"></div>
+  </div>
+  <div class="about-content reveal">
+    <p class="section-label">О подходе</p>
+    <h2 class="section-title">Почему я<br>этим занимаюсь</h2>
+    <div class="about-divider"></div>
+    <p class="about-text">Проекты с книгами для меня — это не основная работа, а дело души. У меня есть основной бизнес, но профессию журналиста и издателя я не оставляю осознанно — потому что люблю работать с историями и людьми.</p>
+    <br>
+    <p class="about-text">Я беру ограниченное количество проектов, потому что вкладываюсь в каждый на 100% — временем, вниманием и отношением. Для меня каждая книга — личная история, а не потоковый продукт.</p>
+    <div class="about-tags">
+      <span class="about-tag">Онлайн</span>
+      <span class="about-tag">Казахстан и весь мир</span>
+      <span class="about-tag">Индивидуально</span>
+      <span class="about-tag">Ограниченный приём</span>
+    </div>
+  </div>
+</section>
+
+<!-- BOOK TYPES -->
+<section class="book-types" id="books">
+  <div class="bt-header reveal">
+    <p class="section-label">Виды книг</p>
+    <h2 class="section-title">Какие книги я создаю</h2>
+  </div>
+  <div class="bt-grid">
+    <div class="bt-card reveal">
+      <img src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=800&q=80" alt="личные книги" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')">
+      <div class="bt-card-body">
+        <span class="bt-card-num">01</span>
+        <h3 class="bt-card-title">Для частных клиентов</h3>
+        <ul class="bt-items">
+          <li>Памятные книги о жизни человека</li>
+          <li>Семейные книги</li>
+          <li>Книги воспоминаний</li>
+          <li>Книги о важных этапах жизни</li>
+          <li>Книги путешествий</li>
+          <li>Книги встреч и событий</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bt-card reveal">
+      <img src="https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80" alt="корпоративные" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')">
+      <div class="bt-card-body">
+        <span class="bt-card-num">02</span>
+        <h3 class="bt-card-title">Для компаний и мероприятий</h3>
+        <ul class="bt-items">
+          <li>Корпоративные книги и журналы</li>
+          <li>Памятные журналы для мероприятий</li>
+          <li>Книги о компании, людях и ценностях</li>
+        </ul>
+        <p style="margin-top:18px;font-size:11px;color:rgba(255,255,255,.38);font-style:italic">Беру по предварительному запросу</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section class="process" id="process">
+  <div class="proc-header reveal">
+    <p class="section-label">Как это работает</p>
+    <h2 class="section-title">Шесть шагов<br>от идеи до книги</h2>
+  </div>
+  <div class="proc-steps">
+    <div class="proc-step reveal"><span class="proc-num">1</span><div class="proc-icon">💬</div><h3 class="proc-title">Консультация</h3><p class="proc-desc">Бесплатная онлайн-встреча. Знакомимся, обсуждаем вашу идею и задачи.</p></div>
+    <div class="proc-step reveal"><span class="proc-num">2</span><div class="proc-icon">📋</div><h3 class="proc-title">Формат и концепция</h3><p class="proc-desc">Определяем структуру, объём, стиль и концепцию будущей книги.</p></div>
+    <div class="proc-step reveal"><span class="proc-num">3</span><div class="proc-icon">🎙️</div><h3 class="proc-title">Интервью</h3><p class="proc-desc">Провожу интервью с вами или близким человеком — бережно собираю истории.</p></div>
+    <div class="proc-step reveal"><span class="proc-num">4</span><div class="proc-icon">✍️</div><h3 class="proc-title">Тексты и редактура</h3><p class="proc-desc">Пишу с журналистской подачей — живо, тепло и по-настоящему.</p></div>
+    <div class="proc-step reveal"><span class="proc-num">5</span><div class="proc-icon">🎨</div><h3 class="proc-title">Дизайн и вёрстка</h3><p class="proc-desc">Разрабатываю концепцию и вёрстку, показываю макет для согласования.</p></div>
+    <div class="proc-step reveal"><span class="proc-num">6</span><div class="proc-icon">📚</div><h3 class="proc-title">Готовая книга</h3><p class="proc-desc">Получаете полностью готовый макет в электронном виде, готовый к печати.</p></div>
+  </div>
+</section>
+
+<!-- INCLUDED -->
+<section class="included-section" id="included">
+  <div class="inc-photo">
+    <img src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=900&q=80" alt="книга" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')">
+    <div class="inc-photo-overlay"></div>
+  </div>
+  <div class="inc-content reveal">
+    <p class="section-label">Что входит</p>
+    <h2 class="section-title">Полный цикл<br>под ключ</h2>
+    <div class="inc-list">
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Онлайн-интервью</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Сбор и обработка информации</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Журналистская подача историй</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Написание текстов</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Редактура</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Разработка концепции книги</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Вёрстка и подготовка макета</p></div>
+      <div class="inc-item"><div class="inc-dot"></div><p class="inc-text">Рисованные иллюстрации (опционально)</p></div>
+    </div>
+    <div class="inc-note">
+      Вы получаете полностью готовый макет книги. Печать рассчитывается отдельно — под ваши задачи и тираж.
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIALS -->
+<section class="testimonial">
+  <div class="testi-card reveal">
+    <div class="testi-stars">★★★★★</div>
+    <p class="testi-text">"Я не верила, что из наших семейных фото и воспоминаний получится что-то настолько красивое. Теперь эта книга — наша самая дорогая реликвия."</p>
+    <p class="testi-author">— Айгерим, Алматы</p>
+  </div>
+  <div class="testi-card reveal">
+    <div class="testi-stars">★★★★★</div>
+    <p class="testi-text">"Заказала книгу о маме к её 70-летию. Когда она её увидела — расплакалась от счастья. Это лучший подарок, который я когда-либо делала."</p>
+    <p class="testi-author">— Динара, Астана</p>
+  </div>
+  <div class="testi-card reveal">
+    <div class="testi-stars">★★★★★</div>
+    <p class="testi-text">"Работали над книгой о дедушке. Весь процесс прошёл легко и тепло. Результат превзошёл все ожидания — семья была в слезах от счастья."</p>
+    <p class="testi-author">— Семья Абеновых</p>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-bg"><img src="https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=1400&q=80" alt="фон" onerror="this.style.background='#1a5c4e';this.style.opacity='0.4';this.removeAttribute('src')"></div>
+  <div class="cta-overlay"></div>
+  <div class="cta-body reveal">
+    <span class="cta-label">Первый шаг — бесплатно</span>
+    <h2 class="cta-title">Хотите сохранить историю<br><em>близкого человека</em> в книге?</h2>
+    <p class="cta-sub">Напишите мне — обсудим идею и формат вашей книги.<br>Первая консультация — бесплатно.</p>
+    <div class="cta-btns">
+      <a href="tel:+77019977300" class="btn-white">Позвонить</a>
+      <a href="https://wa.me/77019977300" class="btn-outline">Написать в WhatsApp</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Памятные книги</div>
+  <div class="footer-mid">
+    Работаю онлайн · Казахстан и другие страны<br>
+    Индивидуальный подход · Ограниченный приём проектов
+  </div>
+  <div class="footer-right">
+    <small>Связаться</small>
+    <a href="tel:+77019977300">+7 701 997 73 00</a>
+    <a href="https://wa.me/77019977300" class="footer-wa">WhatsApp</a>
+  </div>
+</footer>
+
+<script>
+  // Hide loader after 2.8s
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loader').classList.add('hidden');
+      document.body.style.overflow = '';
+    }, 2800);
+  });
+  document.body.style.overflow = 'hidden';
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if(e.isIntersecting){
+        setTimeout(() => e.target.classList.add('visible'), i * 100);
+        obs.unobserve(e.target);
+      }
+    });
+  }, {threshold: 0.1});
+  reveals.forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
